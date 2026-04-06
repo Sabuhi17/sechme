@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="az">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Seçmə Oyunu — Statistik Səhvləri Tap</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0d0f14;--surface:#13161e;--surface2:#1a1e29;--border:rgba(255,255,255,0.07);--accent:#c8f135;--accent2:#3df5c4;--danger:#ff5c5c;--warn:#ffb340;--text:#e8eaf0;--muted:#606882;--font-display:'Syne',sans-serif;--font-body:'DM Sans',sans-serif;--font-mono:'DM Mono',monospace;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--text);font-family:var(--font-body);min-height:100vh;overflow-x:hidden;}
+body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(200,241,53,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(200,241,53,0.03) 1px,transparent 1px);background-size:40px 40px;pointer-events:none;z-index:0;}
+.container{position:relative;z-index:1;max-width:860px;margin:0 auto;padding:2rem 1.5rem 4rem;}
+header{margin-bottom:2.5rem;}
+.logo{font-family:var(--font-display);font-size:11px;font-weight:600;letter-spacing:0.2em;text-transform:uppercase;color:var(--accent);margin-bottom:1rem;}
+h1{font-family:var(--font-display);font-size:clamp(2rem,5vw,3rem);font-weight:800;line-height:1.05;margin-bottom:0.5rem;}
+h1 span{color:var(--accent);}
+.tagline{font-size:14px;color:var(--muted);max-width:520px;line-height:1.6;}
+.scoreboard{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:2rem;}
+.score-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 12px;text-align:center;}
+.score-card .val{font-family:var(--font-display);font-size:1.8rem;font-weight:800;line-height:1;margin-bottom:4px;}
+.score-card .lbl{font-size:11px;color:var(--muted);letter-spacing:0.05em;text-transform:uppercase;}
+.score-card.c1 .val{color:var(--accent);}
+.score-card.c2 .val{color:var(--accent2);}
+.score-card.c3 .val{color:var(--danger);}
+.score-card.c4 .val{color:var(--warn);}
+.prog-wrap{margin-bottom:1.75rem;}
+.prog-label{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-bottom:6px;font-family:var(--font-mono);}
+.prog-track{height:3px;background:var(--surface2);border-radius:2px;overflow:hidden;}
+.prog-fill{height:100%;background:var(--accent);border-radius:2px;transition:width 0.4s cubic-bezier(.4,0,.2,1);}
+.timer-wrap{display:flex;align-items:center;gap:5px;}
+.timer-dot{width:6px;height:6px;border-radius:50%;background:var(--accent);animation:pulse 1s infinite;}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.3}}
+.game-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:1.75rem;margin-bottom:1.5rem;transition:border-color 0.3s;animation:fadeSlide 0.35s ease;}
+.game-card.correct{border-color:var(--accent2);}
+.game-card.wrong{border-color:var(--danger);}
+@keyframes fadeSlide{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.card-meta{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:1.25rem;align-items:center;}
+.badge{font-size:11px;font-weight:500;padding:3px 10px;border-radius:20px;font-family:var(--font-mono);}
+.badge-sahe{background:rgba(200,241,53,0.12);color:var(--accent);}
+.badge-n{background:rgba(255,255,255,0.06);color:var(--muted);}
+.badge-q{background:rgba(61,245,196,0.1);color:var(--accent2);}
+.card-title{font-family:var(--font-display);font-size:1.05rem;font-weight:700;margin-bottom:0.35rem;}
+.card-sual{font-size:13px;color:var(--muted);font-style:italic;margin-bottom:1.1rem;line-height:1.5;}
+.data-table{width:100%;border-collapse:collapse;font-size:13px;margin-bottom:1.1rem;}
+.data-table th{text-align:left;color:var(--muted);font-family:var(--font-mono);font-size:11px;letter-spacing:0.05em;text-transform:uppercase;padding:0 8px 8px;border-bottom:1px solid var(--border);}
+.data-table td{padding:7px 8px;border-bottom:1px solid var(--border);}
+.data-table tr:last-child td{border-bottom:none;}
+.bar-mini{height:6px;border-radius:3px;background:rgba(200,241,53,0.2);display:inline-block;}
+.harf{font-family:var(--font-mono);font-weight:500;color:var(--accent);}
+.pct{color:var(--muted);font-family:var(--font-mono);font-size:12px;}
+.natice-box{background:rgba(255,92,92,0.07);border:1px solid rgba(255,92,92,0.2);border-radius:10px;padding:11px 14px;margin-bottom:1.1rem;font-size:13px;line-height:1.6;color:#ffaaaa;}
+.natice-box strong{color:var(--danger);font-weight:600;}
+.q-text{font-size:14px;font-weight:500;margin-bottom:0.7rem;}
+.opts-grid{display:grid;gap:7px;}
+.opt-btn{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:11px 14px;cursor:pointer;text-align:left;font-size:13px;color:var(--text);font-family:var(--font-body);transition:all 0.15s;display:flex;align-items:flex-start;gap:10px;}
+.opt-btn:hover:not(:disabled){border-color:rgba(200,241,53,0.4);background:rgba(200,241,53,0.05);}
+.opt-btn.selected{border-color:var(--accent);background:rgba(200,241,53,0.08);}
+.opt-btn.correct-ans{border-color:var(--accent2);background:rgba(61,245,196,0.08);color:var(--accent2);}
+.opt-btn.wrong-ans{border-color:var(--danger);background:rgba(255,92,92,0.08);color:var(--danger);}
+.opt-btn:disabled{cursor:default;}
+.opt-letter{font-family:var(--font-mono);font-size:11px;font-weight:500;background:rgba(255,255,255,0.07);padding:2px 6px;border-radius:5px;flex-shrink:0;margin-top:1px;}
+.action-row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:1.2rem;}
+.btn-primary{background:var(--accent);color:#0d0f14;border:none;border-radius:10px;padding:11px 22px;font-family:var(--font-display);font-size:14px;font-weight:700;cursor:pointer;transition:all 0.15s;letter-spacing:0.02em;}
+.btn-primary:hover:not(:disabled){background:#d9ff55;transform:translateY(-1px);}
+.btn-primary:disabled{opacity:0.35;cursor:default;transform:none;}
+.btn-secondary{background:transparent;color:var(--muted);border:1px solid var(--border);border-radius:10px;padding:11px 22px;font-family:var(--font-display);font-size:14px;font-weight:600;cursor:pointer;transition:all 0.15s;}
+.btn-secondary:hover{border-color:rgba(255,255,255,0.2);color:var(--text);}
+.nav-hint{font-size:12px;color:var(--muted);font-family:var(--font-mono);}
+.feedback-panel{border-radius:12px;padding:1.2rem;margin-top:1rem;animation:fadeSlide 0.3s ease;display:none;}
+.feedback-panel.show{display:block;}
+.feedback-panel.ok{background:rgba(61,245,196,0.07);border:1px solid rgba(61,245,196,0.25);}
+.feedback-panel.bad{background:rgba(255,92,92,0.07);border:1px solid rgba(255,92,92,0.25);}
+.fb-title{font-family:var(--font-display);font-size:15px;font-weight:700;margin-bottom:0.5rem;}
+.feedback-panel.ok .fb-title{color:var(--accent2);}
+.feedback-panel.bad .fb-title{color:var(--danger);}
+.fb-body{font-size:13px;line-height:1.65;color:var(--muted);}
+.fb-body strong{color:var(--text);font-weight:500;}
+.sehv-list{margin-top:0.75rem;display:flex;flex-direction:column;gap:5px;}
+.sehv-item{display:flex;gap:8px;font-size:12px;color:var(--muted);line-height:1.5;}
+.sehv-num{flex-shrink:0;width:18px;height:18px;border-radius:50%;background:rgba(255,180,64,0.15);color:var(--warn);font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;margin-top:1px;font-family:var(--font-mono);}
+#result-screen{display:none;text-align:center;padding:3rem 1rem;animation:fadeSlide 0.5s ease;}
+.result-emoji{font-size:4rem;margin-bottom:1rem;}
+.result-title{font-family:var(--font-display);font-size:2.2rem;font-weight:800;margin-bottom:0.5rem;}
+.result-sub{font-size:15px;color:var(--muted);margin-bottom:2rem;line-height:1.6;max-width:480px;margin-left:auto;margin-right:auto;}
+.result-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;max-width:420px;margin:0 auto 2rem;}
+.result-stat{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:1.2rem;}
+.result-stat .v{font-family:var(--font-display);font-size:2rem;font-weight:800;}
+.result-stat .l{font-size:11px;color:var(--muted);margin-top:3px;}
+.btn-restart{background:var(--accent);color:#0d0f14;border:none;border-radius:12px;padding:14px 32px;font-family:var(--font-display);font-size:16px;font-weight:800;cursor:pointer;transition:all 0.2s;letter-spacing:0.02em;}
+.btn-restart:hover{background:#d9ff55;transform:translateY(-2px);}
+.streak-flash{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%) scale(0);background:var(--accent);color:#0d0f14;font-family:var(--font-display);font-size:2rem;font-weight:800;padding:1rem 2rem;border-radius:16px;pointer-events:none;z-index:999;opacity:0;transition:all 0.15s;letter-spacing:0.02em;}
+.streak-flash.show{transform:translate(-50%,-50%) scale(1);opacity:1;}
+.streak-flash.hide{transform:translate(-50%,-60%) scale(0.8);opacity:0;}
+.kbd-hint{font-size:11px;color:var(--muted);font-family:var(--font-mono);padding:6px 0 0;opacity:0.6;}
+@media(max-width:600px){.scoreboard{grid-template-columns:repeat(2,1fr);}.result-grid{grid-template-columns:repeat(3,1fr);}h1{font-size:1.8rem;}}
+</style>
+</head>
+<body>
+
+<div class="streak-flash" id="streakFlash"></div>
+
+<div class="container">
+  <header>
+    <div class="logo">Statistika Oyunu · v1.0</div>
+    <h1>Səhvi <span>Tap</span></h1>
+    <p class="tagline">Hər ssenaridə gizlənmiş statistik səhvləri aşkar et — hesab xətalarını, yanlış ümumiləşdirmələri, metodoloji boşluqları.</p>
+  </header>
+
+  <div id="game-section">
+    <div class="scoreboard">
+      <div class="score-card c1"><div class="val" id="sc-xal">0</div><div class="lbl">Xal</div></div>
+      <div class="score-card c2"><div class="val" id="sc-duz">0</div><div class="lbl">Düzgün</div></div>
+      <div class="score-card c3"><div class="val" id="sc-yan">0</div><div class="lbl">Yanlış</div></div>
+      <div class="score-card c4"><div class="val" id="sc-ser">0</div><div class="lbl">Seriya</div></div>
+    </div>
+
+    <div class="prog-wrap">
+      <div class="prog-label">
+        <span id="prog-txt">Ssenari 1 / 8</span>
+        <div class="timer-wrap"><div class="timer-dot"></div><span id="timer-txt">30s</span></div>
+      </div>
+      <div class="prog-track"><div class="prog-fill" id="prog-fill" style="width:0%"></div></div>
+    </div>
+
+    <div class="game-card" id="main-card">
+      <div class="card-meta">
+        <span class="badge badge-sahe" id="c-sahe"></span>
+        <span class="badge badge-n" id="c-n"></span>
+        <span class="badge badge-q" id="c-q"></span>
+      </div>
+      <div class="card-title" id="c-movzu"></div>
+      <div class="card-sual" id="c-sual"></div>
+      <table class="data-table">
+        <thead><tr><th>Var.</th><th>Cavab</th><th>n</th><th>%</th><th>Paylanma</th></tr></thead>
+        <tbody id="data-tbody"></tbody>
+      </table>
+      <div class="natice-box" id="c-natice"></div>
+      <div class="q-text" id="q-text"></div>
+      <div class="opts-grid" id="opts-grid"></div>
+      <div class="action-row">
+        <button class="btn-primary" id="btn-confirm" disabled onclick="doConfirm()">Təsdiqlə</button>
+        <button class="btn-secondary" id="btn-next" style="display:none" onclick="nextQ()">Növbəti →</button>
+        <span class="nav-hint" id="nav-hint"></span>
+      </div>
+      <div class="feedback-panel" id="feedback-panel">
+        <div class="fb-title" id="fb-title"></div>
+        <div class="fb-body" id="fb-body"></div>
+        <div class="sehv-list" id="fb-sehvler"></div>
+      </div>
+      <div class="kbd-hint">Klaviatura: A B C D seçim · Enter təsdiq · → növbəti</div>
+    </div>
+  </div>
+
+  <div id="result-screen">
+    <div class="result-emoji" id="res-emoji"></div>
+    <div class="result-title" id="res-title"></div>
+    <div class="result-sub" id="res-sub"></div>
+    <div class="result-grid">
+      <div class="result-stat"><div class="v" id="res-xal" style="color:var(--accent)"></div><div class="l">Ümumi Xal</div></div>
+      <div class="result-stat"><div class="v" id="res-duz" style="color:var(--accent2)"></div><div class="l">Düzgün</div></div>
+      <div class="result-stat"><div class="v" id="res-pct" style="color:var(--warn)"></div><div class="l">Faiz</div></div>
+    </div>
+    <button class="btn-restart" onclick="restart()">Yenidən Oyna</button>
+  </div>
+</div>
+
+<script>
+const SCENARIOS=[
+  {sahe:"Tibb / Səhiyyə",n_elan:420,qrup:"tibb fakültəsi tələbələri",movzu:"Tələbələrin tibb etikasına münasibəti",sual:"Xəstənin razılığı olmadan müalicə etmək etik sayılırmı?",variantlar:[{h:"A",cavab:"Bəli, həmişə",n:58},{h:"B",cavab:"Yalnız fövqəladə hallarda",n:203},{h:"C",cavab:"Heç vaxt",n:89},{h:"D",cavab:"Bilmirəm",n:71}],natice:"Beləliklə, tibb tələbələrinin əksəriyyəti xəstənin razılığının vacib olmadığını düşünür.",soru:"Bu ssenaridə əsas məntiqi səhv hansıdır?",options:["Hesab xətası: 58+203+89+71=421, elan edilən isə 420-dir.","Nəticə yanlışdır: Əksəriyyət (203 nəfər, ≈48%) 'yalnız fövqəladə hallarda' seçib — bu razılığı inkar etmir.","Sual düzgün formalaşdırılmayıb.","Seçmə məcmusu çox böyükdür."],correct:1,sehvler:["Cəm 421 nəfər, lakin 420 elan edilib (+1 fərq).","Nəticə yanlışdır: Əksəriyyət (≈48%) 'fövqəladə hal' seçib — razılığı tamamilə inkar etmir.","Seçmə üsulu (təsadüfi, kvota?) qeyd edilməyib.","Yalnız bir fakültə əhatə olunub — ümumiləşdirmə məhduddur."],duzgun:"Respondentlərin ≈48%-i razılığın yalnız fövqəladə hallarda keçilə biləcəyini düşünür. Nəticə birmənalı deyil."},
+  {sahe:"Ekologiya",n_elan:280,qrup:"ekologiya ixtisası tələbələri",movzu:"Tələbələrin iqlim dəyişikliyinə münasibəti",sual:"İqlim dəyişikliyinin əsas səbəbi nədir?",variantlar:[{h:"A",cavab:"Sənaye emissiyaları",n:140},{h:"B",cavab:"Nəqliyyat",n:62},{h:"C",cavab:"Kənd təsərrüfatı",n:55},{h:"D",cavab:"Təbii amillər",n:25}],natice:"Nəticəyə görə tələbələr iqlim dəyişikliyinin əsas səbəbinin təbii amillər olduğunu düşünür.",soru:"Bu nəticədə hansı kritik səhv var?",options:["Seçmə həddən artıq böyükdür.","Nəticə düzdür, təbii amillər əksəriyyətin seçimidir.","Ən az seçilən variant (25 nəfər, ≈9%) nəticə kimi göstərilib; əslində əksəriyyət (140 nəfər) sənaye emissiyalarını seçib.","Sualın variantları çoxdur."],correct:2,sehvler:["Cəm: 140+62+55+25=282, elan edilən 280 (+2 fərq).","Ən az seçilən variant (25 nəfər, ≈9%) nəticə kimi göstərilib.","Əksəriyyətin (140 nəfər, ≈50%) cavabı sənaye emissiyaları olub — nəticədə əks etdirilməyib.","Coğrafi ərazi/universitet qeyd edilməyib."],duzgun:"Respondentlərin ≈50%-i iqlim dəyişikliyinin əsas səbəbini sənaye emissiyaları hesab edir. Təbii amillər ən az dəstəklənən variantdır."},
+  {sahe:"Hüquq",n_elan:310,qrup:"hüquq fakültəsi tələbələri",movzu:"Məhkəmə sisteminin ədalətliliyinə inam",sual:"Azərbaycanda məhkəmə sistemini ədalətli hesab edirsinizmi?",variantlar:[{h:"A",cavab:"Tam ədalətlidir",n:21},{h:"B",cavab:"Qismən ədalətlidir",n:158},{h:"C",cavab:"Ədalətsizdir",n:98},{h:"D",cavab:"Fikrim yoxdur",n:34}],natice:"Bu nəticələr göstərir ki, hüquq tələbələrinin hamısı məhkəmə sistemini tam ədalətli sayır.",soru:"'Hamısı' ifadəsi niyə yanlışdır?",options:["Çünki sorğu çox az cavab alıb.","Çünki yalnız 21 nəfər (≈7%) 'tam ədalətlidir' seçib — bu 'hamısı' deyil.","Çünki sual qərəzlidir.","Çünki seçmə məcmusu 300-dən azdır."],correct:1,sehvler:["Cəm: 21+158+98+34=311, elan edilən 310 (+1 fərq).","Yalnız 21 nəfər (≈7%) 'tam ədalətlidir' seçib — 'hamısı' kəskin ümumiləşdirmədir.","98 nəfər (≈32%) sistemi ədalətsiz hesab edir — nəticədə nəzərə alınmayıb.","Anket doldurmaqdan imtina edənlər (nonresponse bias) qeyd edilməyib."],duzgun:"Respondentlərin ≈51%-i sistemi qismən ədalətli, ≈32%-i isə ədalətsiz hesab edir. Yalnız 7%-i 'tam ədalətli' deyib."},
+  {sahe:"Psixologiya",n_elan:195,qrup:"psixologiya ixtisası tələbələri",movzu:"Tələbələrdə emosional tükənmə səviyyəsi",sual:"Son bir ildə emosional tükənmə yaşadınızmı?",variantlar:[{h:"A",cavab:"Bəli, tez-tez",n:83},{h:"B",cavab:"Bəzən",n:71},{h:"C",cavab:"Nadir hallarda",n:29},{h:"D",cavab:"Heç vaxt",n:13}],natice:"Beləliklə, psixologiya tələbələrinin heç biri emosional tükənmə keçirmir.",soru:"Bu nəticədəki ən açıq səhv hansıdır?",options:["Seçmə məcmusu həddən artıq kiçikdir.","Nəticə faktlara tamamilə ziddir: 154 nəfər (≈79%) tükənmə yaşadığını bildirib.","Sual çox şəxsi xarakter daşıyır.","Variant sayı kifayət deyil."],correct:1,sehvler:["Cəm: 83+71+29+13=196, elan edilən 195 (+1 fərq).","83+71=154 nəfər (≈79%) tükənmə yaşadığını bildirib — 'heç biri' tamamilə yanlışdır.","Yalnız 13 nəfər (≈7%) 'heç vaxt' seçib.","Özünü bildirmə metodu — sosial arzu olunan cavab (social desirability bias) mümkündür."],duzgun:"Respondentlərin ≈79%-i müntəzəm və ya bəzən emosional tükənmə yaşadığını bildirib. Bu ciddi bir problemin göstəricisidir."},
+  {sahe:"İqtisadiyyat",n_elan:500,qrup:"iqtisadiyyat fakültəsi tələbələri",movzu:"Tələbələrin startap qurmaq istəyi",sual:"Məzuniyyətdən sonra öz biznesinizi qurmağı planlaşdırırsınızmı?",variantlar:[{h:"A",cavab:"Bəli, mütləq",n:112},{h:"B",cavab:"Bəlkə",n:221},{h:"C",cavab:"Yox, işə girəcəm",n:143},{h:"D",cavab:"Hələ düşünməmişəm",n:25}],natice:"Bu nəticələr göstərir ki, iqtisadiyyat tələbələrinin hamısı öz biznesini qurmaq istəyir.",soru:"'Bəlkə' cavabı ilə bağlı hansı metodoloji problem var?",options:["Bu variant silinməli idi.","'Bəlkə' (221 nəfər) qəti niyyət kimi yozula bilməz; üstəlik 168 nəfər biznes qurmağı planlaşdırmır.","Bu variant çox populyardır, ona görə nəticə düzdür.","Variant sayı beş olmalıydı."],correct:1,sehvler:["Cəm: 112+221+143+25=501, elan edilən 500 (+1 fərq).","'Hamısı' yanlışdır: 168 nəfər (≈34%) biznes qurmağı planlaşdırmır.","'Bəlkə' cavabı (221 nəfər) qəti niyyət kimi yozula bilməz.","Seçmə üsulu qeyd edilməyib — niyyət yanlılığı (intentionality bias) mümkündür."],duzgun:"Yalnız ≈22%-i mütləq biznes qurmaq istəyir. ≈44%-i hələ qərar verməyib. 'Hamısı istəyir' yanlışdır."},
+  {sahe:"Pedaqogika",n_elan:360,qrup:"pedaqogika ixtisası tələbələri",movzu:"Tələbələrin distant təhsilə münasibəti",sual:"Distant (onlayn) təhsili ənənəvi təhsilə nisbətən necə qiymətləndirirsiniz?",variantlar:[{h:"A",cavab:"Daha effektivdir",n:44},{h:"B",cavab:"Bərabər effektivdir",n:97},{h:"C",cavab:"Daha az effektivdir",n:186},{h:"D",cavab:"Fərqi yoxdur",n:34}],natice:"Bu da göstərir ki, bütün pedaqogika tələbələri distant təhsili daha effektiv hesab edir.",soru:"Hansı rəqəm nəticənin yanlış olduğunu ən açıq şəkildə sübut edir?",options:["97 nəfər — bərabər effektiv seçibi.","34 nəfər — fərqi yoxdur seçibi.","186 nəfər (≈52%) distant təhsili daha az effektiv hesab edir — nəticəyə birbaşa ziddir.","44 nəfər — daha effektivdir seçibi."],correct:2,sehvler:["Cəm: 44+97+186+34=361, elan edilən 360 (+1 fərq).","186 nəfər (≈52%) distant təhsili daha az effektiv hesab edir — 'bütün tələbələr' yanlışdır.","Yalnız 44 nəfər (≈12%) 'daha effektivdir' seçib.","Distant təhsilin tezliyi (həftəlik saat) nəzərə alınmayıb."],duzgun:"Respondentlərin ≈52%-i distant təhsili daha az effektiv sayır. Yalnız ≈12%-i onu üstün tutur."},
+  {sahe:"Mühəndislik / AI",n_elan:245,qrup:"mühəndislik ixtisası tələbələri",movzu:"Tələbələrin süni intellektə münasibəti",sual:"Süni intellekt yaxın 10 ildə mühəndisin yerini tamamilə əvəz edəcəkmi?",variantlar:[{h:"A",cavab:"Bəli, tam əvəz edəcək",n:31},{h:"B",cavab:"Qismən əvəz edəcək",n:128},{h:"C",cavab:"Əvəz etməyəcək",n:57},{h:"D",cavab:"Bilmirəm",n:30}],natice:"Beləliklə, mühəndislik tələbələri süni intellektin öz peşələrini heç vaxt əvəz etməyəcəyinə əmindirlər.",soru:"Bu nəticədə hansı iki səhv birləşib?",options:["Seçmə üsulu yanlışdır.","Hesab xətası (246 vs 245) VƏ 'əmin' ifadəsi — yalnız 57 nəfərin (≈23%) cavabı bütün qrupa şamil edilib.","Sualın mövzusu qərəzlidir.","Variant D silinməli idi."],correct:1,sehvler:["Cəm: 31+128+57+30=246, elan edilən 245 (+1 fərq).","'Əvəz etməyəcək' yalnız 57 nəfər (≈23%) seçib — bütün qrup üçün 'əmindir' demək olmaz.","Əksəriyyət (128 nəfər, ≈52%) qismən əvəzlənmə gözlədiyini bildirib.","Tədqiqatın tarixi qeyd edilməyib — AI sürəti baxımından vacibdir."],duzgun:"Respondentlərin ≈52%-i qismən əvəzlənmə gözləyir; yalnız ≈23%-i bunu inkar edir. Nəticə birmənalı deyil."},
+  {sahe:"Sosiologiya",n_elan:350,qrup:"bakalavr tələbəsi olan qadın",movzu:"Tələbələrin universitet-sənaye ortaqlığına münasibəti",sual:"Məzun olduqdan neçə il sonra işlə təmin olunacağınızı düşünürsüz?",variantlar:[{h:"A",cavab:"2 il",n:35},{h:"B",cavab:"3–5 il",n:151},{h:"C",cavab:"6–7 il",n:70},{h:"D",cavab:"10 il",n:95}],natice:"Buradan əminliklə deyə bilərik ki tələbələr ən gec 10 il ərzində iş tapacaqlarına inanırlar.",soru:"Bu original ssenaridəki əsas problem hansıdır?",options:["Sualın variantları çox dardır.","Hesab xətası (35+151+70+95=351, elan edilən 350) VƏ nəticə ən uzun müddəti əsas götürüb ümumiləşdirib — əksəriyyətin (151 nəfər) 3–5 il seçdiyi nəzərə alınmayıb.","Seçmənin yalnız qadınlardan ibarət olması tam düzgündür.","Nəticə tamamilə doğrudur."],correct:1,sehvler:["Cəm: 35+151+70+95=351, elan edilən 350 (+1 fərq).","Əksəriyyət (151 nəfər, ≈43%) 3–5 il seçib; nəticə isə ən uzun müddəti (10 il) əsas götürüb.","Yalnız qadınlardan ibarət seçmə bütün tələbələrə şamil edilib — bu məhdudiyyət qeyd edilməyib.","Seçmə üsulu (təsadüfi, məqsədli?) göstərilməyib."],duzgun:"Əksəriyyətin (≈43%) 3–5 il gözlədiyini nəzərə alsaq, nəticə bu dominant rəyi əks etdirməli idi, ən uzun müddəti deyil."}
+];
+
+let cur=0,xal=0,duz=0,yan=0,seriya=0;
+let selected=null,answered=false;
+let timerInterval=null,timerLeft=30;
+const shuffled=[...SCENARIOS].sort(()=>Math.random()-0.5);
+
+function cem(v){return v.reduce((a,b)=>a+b.n,0);}
+
+function renderCard(){
+  const s=shuffled[cur];
+  const total=cem(s.variantlar);
+  const maxN=Math.max(...s.variantlar.map(v=>v.n));
+  selected=null;answered=false;
+
+  document.getElementById('c-sahe').textContent=s.sahe;
+  const nDiff=total!==s.n_elan;
+  document.getElementById('c-n').innerHTML='n = '+s.n_elan+(nDiff?' <span style="color:var(--danger)">⚠ '+total+'</span>':'');
+  document.getElementById('c-q').textContent=s.qrup;
+  document.getElementById('c-movzu').textContent=s.movzu;
+  document.getElementById('c-sual').textContent='❝ '+s.sual+' ❞';
+  document.getElementById('c-natice').innerHTML='<strong>Elan edilən nəticə:</strong> '+s.natice;
+
+  let rows='';
+  s.variantlar.forEach(v=>{
+    const pct=(v.n/total*100).toFixed(1);
+    const w=Math.round(v.n/maxN*64);
+    rows+=`<tr><td><span class="harf">${v.h}</span></td><td>${v.cavab}</td><td>${v.n}</td><td class="pct">${pct}%</td><td><span class="bar-mini" style="width:${w}px"></span></td></tr>`;
+  });
+  document.getElementById('data-tbody').innerHTML=rows;
+
+  document.getElementById('q-text').textContent=s.soru;
+  const og=document.getElementById('opts-grid');
+  og.innerHTML='';
+  const letters=['A','B','C','D'];
+  s.options.forEach((o,i)=>{
+    const btn=document.createElement('button');
+    btn.className='opt-btn';
+    btn.innerHTML=`<span class="opt-letter">${letters[i]}</span><span>${o}</span>`;
+    btn.onclick=()=>selectOpt(i);
+    og.appendChild(btn);
+  });
+
+  document.getElementById('btn-confirm').disabled=true;
+  document.getElementById('btn-confirm').style.display='inline-block';
+  document.getElementById('btn-next').style.display='none';
+  document.getElementById('nav-hint').textContent='';
+  const fp=document.getElementById('feedback-panel');
+  fp.className='feedback-panel';
+  const mc=document.getElementById('main-card');
+  mc.className='game-card';
+
+  updateProg();
+  startTimer();
+}
+
+function selectOpt(i){
+  if(answered)return;
+  selected=i;
+  document.querySelectorAll('.opt-btn').forEach((b,idx)=>{
+    b.className='opt-btn'+(idx===i?' selected':'');
+  });
+  document.getElementById('btn-confirm').disabled=false;
+}
+
+function doConfirm(){
+  if(answered||selected===null)return;
+  answered=true;
+  clearInterval(timerInterval);
+  const s=shuffled[cur];
+  const isOk=selected===s.correct;
+
+  document.querySelectorAll('.opt-btn').forEach((b,i)=>{
+    b.disabled=true;
+    if(i===s.correct)b.classList.add('correct-ans');
+    else if(i===selected)b.classList.add('wrong-ans');
+  });
+
+  const mc=document.getElementById('main-card');
+  mc.className='game-card '+(isOk?'correct':'wrong');
+  const fp=document.getElementById('feedback-panel');
+  fp.className='feedback-panel show '+(isOk?'ok':'bad');
+
+  if(isOk){
+    seriya++;duz++;
+    const bonus=seriya>=3?50:seriya>=2?25:0;
+    xal+=100+bonus;
+    document.getElementById('fb-title').textContent='✓ Düzgün!'+(bonus>0?' +'+bonus+' seriya bonusu!':'');
+    document.getElementById('fb-body').innerHTML='<strong>Düzgün nəticə:</strong> '+s.duzgun;
+    if(seriya>=2)showStreak(seriya+'× Seriya!');
+  }else{
+    seriya=0;yan++;
+    document.getElementById('fb-title').textContent='✗ Yanlış';
+    document.getElementById('fb-body').innerHTML='<strong>Düzgün cavab:</strong> '+s.options[s.correct]+'<br><br><strong>Düzgün nəticə:</strong> '+s.duzgun;
+  }
+
+  let sh='<div style="font-size:11px;color:var(--warn);font-weight:600;margin-bottom:6px;font-family:var(--font-mono);">BÜTÜN SƏHVLƏR</div>';
+  s.sehvler.forEach((e,i)=>{
+    sh+=`<div class="sehv-item"><div class="sehv-num">${i+1}</div><span>${e}</span></div>`;
+  });
+  document.getElementById('fb-sehvler').innerHTML=sh;
+
+  updateScore();
+  document.getElementById('btn-confirm').style.display='none';
+  document.getElementById('btn-next').style.display='inline-block';
+  document.getElementById('nav-hint').textContent=cur<shuffled.length-1?(cur+2)+'/'+shuffled.length:'Son ssenari!';
+}
+
+function nextQ(){
+  cur++;
+  if(cur>=shuffled.length){showResult();return;}
+  renderCard();
+}
+
+function updateScore(){
+  document.getElementById('sc-xal').textContent=xal;
+  document.getElementById('sc-duz').textContent=duz;
+  document.getElementById('sc-yan').textContent=yan;
+  document.getElementById('sc-ser').textContent=seriya;
+}
+
+function updateProg(){
+  document.getElementById('prog-fill').style.width=(cur/shuffled.length*100)+'%';
+  document.getElementById('prog-txt').textContent='Ssenari '+(cur+1)+' / '+shuffled.length;
+}
+
+function startTimer(){
+  timerLeft=30;
+  clearInterval(timerInterval);
+  document.getElementById('timer-txt').textContent='30s';
+  timerInterval=setInterval(()=>{
+    timerLeft--;
+    document.getElementById('timer-txt').textContent=timerLeft+'s';
+    if(timerLeft<=10)document.getElementById('timer-txt').style.color='var(--danger)';
+    else document.getElementById('timer-txt').style.color='';
+    if(timerLeft<=0){
+      clearInterval(timerInterval);
+      if(!answered){
+        answered=true;seriya=0;yan++;
+        const s=shuffled[cur];
+        document.querySelectorAll('.opt-btn').forEach((b,i)=>{b.disabled=true;if(i===s.correct)b.classList.add('correct-ans');});
+        const fp=document.getElementById('feedback-panel');
+        fp.className='feedback-panel show bad';
+        document.getElementById('fb-title').textContent='⏱ Vaxt Bitdi!';
+        document.getElementById('fb-body').innerHTML='<strong>Düzgün cavab:</strong> '+s.options[s.correct]+'<br><br>'+s.duzgun;
+        document.getElementById('fb-sehvler').innerHTML='';
+        document.getElementById('btn-confirm').style.display='none';
+        document.getElementById('btn-next').style.display='inline-block';
+        updateScore();
+      }
+    }
+  },1000);
+}
+
+function showStreak(msg){
+  const el=document.getElementById('streakFlash');
+  el.textContent=msg;el.className='streak-flash show';
+  setTimeout(()=>{el.className='streak-flash hide';},1200);
+  setTimeout(()=>{el.className='streak-flash';},1500);
+}
+
+function showResult(){
+  clearInterval(timerInterval);
+  document.getElementById('game-section').style.display='none';
+  const rs=document.getElementById('result-screen');
+  rs.style.display='block';
+  const pct=Math.round(duz/shuffled.length*100);
+  let emoji,title,sub;
+  if(pct>=87){emoji='🏆';title='Mükəmməl!';sub='Statistik düşüncə sənin güclü tərəfindir. Ən yüksək xal!';}
+  else if(pct>=62){emoji='🎯';title='Yaxşı iş!';sub='Əksər ssenaridəki səhvləri tapdın. Bir az daha diqqətli ol.';}
+  else if(pct>=37){emoji='📊';title='Davam Et!';sub='Statistik səhvləri tanımaq praktika tələb edir. Yenidən cəhd et!';}
+  else{emoji='🔍';title='Öyrənməyə Davam!';sub='Hər yanlış cavab sənə daha çox şey öyrədir. Yenidən oyna!';}
+  document.getElementById('res-emoji').textContent=emoji;
+  document.getElementById('res-title').textContent=title;
+  document.getElementById('res-sub').textContent=sub;
+  document.getElementById('res-xal').textContent=xal;
+  document.getElementById('res-duz').textContent=duz+'/'+shuffled.length;
+  document.getElementById('res-pct').textContent=pct+'%';
+}
+
+function restart(){
+  cur=0;xal=0;duz=0;yan=0;seriya=0;
+  shuffled.sort(()=>Math.random()-0.5);
+  document.getElementById('result-screen').style.display='none';
+  document.getElementById('game-section').style.display='block';
+  updateScore();renderCard();
+}
+
+document.addEventListener('keydown',e=>{
+  if(e.target.tagName==='BUTTON')return;
+  if(e.key==='Enter'&&!document.getElementById('btn-confirm').disabled&&!answered)doConfirm();
+  if((e.key==='ArrowRight'||e.key==='n')&&document.getElementById('btn-next').style.display!=='none')nextQ();
+  if(!answered){
+    const map={'1':0,'2':1,'3':2,'4':3,'a':0,'b':1,'c':2,'d':3};
+    const k=e.key.toLowerCase();
+    if(map[k]!==undefined)selectOpt(map[k]);
+  }
+});
+
+renderCard();
+</script>
+</body>
+</html>
